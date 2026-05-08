@@ -2,7 +2,11 @@ plink --bfile qcfile --recode vcf-iid --out EE_QC
 bgzip -c EE_QC.vcf > EE_QC.vcf.gz
 tabix -f EE_QC.vcf.gz
 
-
+######去重复######
+#######去重复######
+######去重复######
+#######去重复######
+！！！！！！！！！！！
 ###指控后的文件转为vcf然后拆分
 #!/bin/bash
 
@@ -11,6 +15,22 @@ OUTDIR="split_vcf"
 
 mkdir -p ${OUTDIR}
 
+# =========================
+# 1. 去重（核心）
+# =========================
+echo "==== removing duplicates ===="
+
+bcftools norm -d exact \
+    ${VCF} \
+    -Oz -o EE_QC.rmdup.vcf.gz
+
+tabix -f -p vcf EE_QC.rmdup.vcf.gz
+
+VCF="EE_QC.rmdup.vcf.gz"
+
+# =========================
+# 2. split chromosomes
+# =========================
 for chr in {1..18}; do
 
     echo "Processing chr${chr} ..."
@@ -21,8 +41,7 @@ for chr in {1..18}; do
         -Oz \
         -o ${OUTDIR}/phased_chr${chr}.vcf.gz
 
-    tabix -f -p vcf \
-        ${OUTDIR}/phased_chr${chr}.vcf.gz
+    tabix -f -p vcf ${OUTDIR}/phased_chr${chr}.vcf.gz
 
 done
 
