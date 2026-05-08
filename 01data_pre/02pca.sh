@@ -1,6 +1,8 @@
+filepath="/work/lingcj/03chip_data/02anlyis/01data/03growth/03GWAS/01chip_gwas/00data/01bfile/work_pipeline"
 
 mkdir -p PCA
-plink --bfile EE_QC_growth --pca 20 --out PCA/EE_growth_pca
+cd PCA
+plink --bfile ${filepath}/EE_final --pca 20 --out EE_growth_pca
 
 cat > pca_plot.r << EOF
 # 1. PCA读取
