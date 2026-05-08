@@ -1,52 +1,114 @@
-##转为11.1的位点
-###############
-awk 'NR>1 {print $2"\t"$7"\t"$8}' JXLab_ChinaChip50K_PLUS_SSC11.map > map11.txt
+#!/bin/bash
+set -euo pipefail
+
+############################
+# 输入文件
+############################
+MAP_REF="JXLab_ChinaChip50K_PLUS_SSC11.map"
+MAP_OLD="EE.map"
+PED_OLD="EE.ped"
+KEEP_ID="/work/lingcj/03chip_data/02anlyis/01data/01pre_exchange/ID_compare/growth_keep.txt"
+
+PREFIX="EE"
+
+############################
+# 输出目录
+############################
+WORKDIR="work_pipeline"
+mkdir -p ${WORKDIR}
+cd ${WORKDIR}
+
+############################
+# 1. map转染色体+位置
+############################
+awk 'NR>1 {print $2"\t"$7"\t"$8}' ../${MAP_REF} > map11.txt
+
 awk '
-BEGIN{
-    FS=OFS="\t"
-}
+BEGIN{FS=OFS="\t"}
 NR==FNR{
-    pos[$1]=$3
     chr[$1]=$2
+    pos[$1]=$3
     next
 }
 {
     id=$2
-    if(id in pos){
+    if(id in chr){
         $1=chr[id]
         $4=pos[id]
     } else {
-        $4="NA"
+        $4="0"
     }
     print
-}
-' map11.txt EE.map > EE.SSC11.map
+}' map11.txt ../${MAP_OLD} > ${PREFIX}.SSC11.map
 
-###保留常染色体，提取需要保留的样本id
-plink --file /work/lingcj/03chip_data/01_data/01check/data/EE.SSC11 \
+cp ../${PED_OLD} ${PREFIX}.SSC11.ped
+
+############################
+# 2. plink生成bfile + 样本过滤
+############################
+plink --file ${PREFIX}.SSC11 \
       --chr 1-18 \
-      --keep /work/lingcj/03chip_data/02anlyis/01data/01pre_exchange/ID_compare/growth_keep.txt \
+      --keep ${KEEP_ID} \
       --make-bed \
-      --out EE_growth
+      --out ${PREFIX}_growth
 
-# =========================
-# 1. 基础QC
-# =========================
+############################
+# 3. QC
+############################
+plink --bfile ${PREFIX}_growth \
+      --maf 0.01 \
+      --geno 0.10 \
+      --hwe 1e-6 \
+      --make-bed \
+      --out ${PREFIX}_QC
 
-plink --bfile EE_growth \
-  --maf 0.01 \
-  --geno 0.10 \
-  --hwe 1e-6 \
-  --make-bed \
-  --out EE_QC_growth
+############################
+# 4. 转VCF（带压缩）
+############################
+plink --bfile ${PREFIX}_QC \
+      --recode vcf-iid bgz \
+      --out ${PREFIX}_QC
 
-###转为vcf，改id
-plink --bfile ../EE_QC_growth --recode vcf-iid --out EE_vcf
+tabix -f ${PREFIX}_QC.vcf.gz
 
+############################
+# 5. 去重复（bcftools）
+############################
+bcftools norm -d exact \
+    ${PREFIX}_QC.vcf.gz \
+    -Oz -o ${PREFIX}_rmdup.vcf.gz
+
+tabix -f -p vcf ${PREFIX}_rmdup.vcf.gz
+
+############################
+# 6. 重设ID（标准化）
+############################
 bcftools annotate \
-  -x ID \
-  --set-id '%CHROM\_%POS\_%REF\_%ALT' \
-  EE_vcf.vcf -Ov -o EE_vcf.newID.vcf
+    -x ID \
+    --set-id '%CHROM\_%POS\_%REF\_%ALT' \
+    ${PREFIX}_rmdup.vcf.gz \
+    -Oz -o ${PREFIX}_final.vcf.gz
 
-plink --vcf EE_vcf.newID.vcf --make-bed --out growth_newid
+tabix -f -p vcf ${PREFIX}_final.vcf.gz
 
+############################
+# 7. 回写plink（二次确认一致性）
+############################
+plink --vcf ${PREFIX}_final.vcf.gz \
+      --make-bed \
+      --out ${PREFIX}_final
+
+############################
+# 8. 清理中间文件（只保留最终结果）
+############################
+rm -f \
+map11.txt \
+${PREFIX}.SSC11.map \
+${PREFIX}.SSC11.ped \
+${PREFIX}_growth.* \
+${PREFIX}_QC.* \
+${PREFIX}_rmdup.vcf.gz*
+
+echo "DONE: final files kept:"
+echo "  VCF: ${PREFIX}_final.vcf.gz + .tbi"
+echo "  PLINK: ${PREFIX}_final.bed/.bim/.fam"
