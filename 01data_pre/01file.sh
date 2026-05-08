@@ -1,3 +1,27 @@
+awk 'NR>1 {print $2"\t"$7"\t"$8}' JXLab_ChinaChip50K_PLUS_SSC11.map > map11.txt
+awk '
+BEGIN{
+    FS=OFS="\t"
+}
+NR==FNR{
+    pos[$1]=$3
+    chr[$1]=$2
+    next
+}
+{
+    id=$2
+    if(id in pos){
+        $1=chr[id]
+        $4=pos[id]
+    } else {
+        $4="NA"
+    }
+    print
+}
+' map11.txt EE.map > EE.SSC11.map
+
+##path=/work/lingcj/03chip_data/01_data/01check
+
 
 plink --file /work/lingcj/03chip_data/01_data/01check/data/EE.SSC11 \
       --chr 1-18 \
