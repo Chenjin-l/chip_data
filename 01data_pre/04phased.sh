@@ -1,12 +1,13 @@
 
-
 #!/bin/bash
 #PBS -N beagle_phase
 #PBS -q batch
 #PBS -l nodes=1:ppn=10
 #PBS -l mem=30G
+#PBS -o /home/Mzhou/02.F2/log 
+#PBS -e /home/Mzhou/02.F2/log
 #PBS -j oe
-#PBS -t 1-18
+#PBS -t 1-5
 
 BEAGLE=/home/Mzhou/02.F2/software/beagle.29Oct24.c8e.jar
 
@@ -18,7 +19,7 @@ OUT_DIR="/work/lingcj/03chip_data/02anlyis/01data/03growth/01bfile/02vcf/02_1k_p
 
 mkdir -p ${OUT_DIR}
 
-chr=$(PBS_ARRAYID)
+chr=${PBS_ARRAYID}
 
     echo "===== chr${chr} ====="
 
