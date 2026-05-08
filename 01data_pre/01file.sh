@@ -1,4 +1,9 @@
 
+plink --file /work/lingcj/03chip_data/01_data/01check/data/EE.SSC11 \
+      --chr 1-18 \
+      --keep /work/lingcj/03chip_data/02anlyis/01data/01pre_exchange/ID_compare/growth_keep.txt \
+      --make-bed \
+      --out EE_growth
 
 # =========================
 # 1. 基础QC（芯片数据）
