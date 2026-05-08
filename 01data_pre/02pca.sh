@@ -1,5 +1,6 @@
 
-
+mkdir -p PCA
+plink --bfile EE_QC_growth --pca 20 --out PCA/EE_growth_pca
 
 cat > pca_plot.r << EOF
 # 1. PCA读取
@@ -69,6 +70,4 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate R4 
 Rscript pca_plot.r > plot.log
 
-# =========================
-# PCA plot
-# =========================
+
