@@ -1,3 +1,4 @@
+
 #!/bin/bash
 #PBS -N ldak_gwas
 #PBS -q batch
@@ -46,7 +47,6 @@ INDEX_FILE="/work/lingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputatio
 # 6. 工作目录
 # =========================
 WORK_DIR="/work/lingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputation/02_1kpig_imp_gwas/02LDAK_gwas/01step1"
-
 THREADS=32
 pheno_col=$((PBS_ARRAYID-2))  # 3→1,4→2,5→3 正确
 
@@ -84,11 +84,11 @@ ldak6 --kvik-step1 gwas_${PheName}_step1 \
     --max-threads $THREADS
 
 # ======================
-# Step 2 【修复】必须指定输出名
+# Step 2
 # ======================
 echo "Step2 KVIK..."
 
-ldak6 --kvik-step2 gwas_${PheName}_step2 \
+ldak6 --kvik-step2 gwas_${PheName}_step1 \
     --bfile $GENO \
     --pheno $PHENO \
     --covar $COVAR_QUANT \
@@ -99,4 +99,4 @@ ldak6 --kvik-step2 gwas_${PheName}_step2 \
 # ======================
 # 排序p值
 # ======================
-sort -gk2 gwas_${PheName}_step2.pvalues > sort_min_pvalue.txt
+sort -gk2 gwas_${PheName}_step1.step2.pvalues > sort_min_pvalue.txt
