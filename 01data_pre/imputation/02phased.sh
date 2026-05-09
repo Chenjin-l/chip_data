@@ -31,3 +31,6 @@ chr=${PBS_ARRAYID}
         nthreads=8 \
         impute=false
 
+cd ${OUT_DIR}
+tabix -f -p vcf phase.chr${chr}.vcf.gz
+
