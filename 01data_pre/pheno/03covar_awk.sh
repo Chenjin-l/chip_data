@@ -81,5 +81,5 @@ cat("============================\n")
 # ===============================
 # 7. 输出文件
 # ===============================
-fwrite(covar_factor, "covar_factor.txt")
-fwrite(covar_quant,  "covar_quant.txt")
+fwrite(covar_factor, "covar_factor.txt",sep="\t")
+fwrite(covar_quant,  "covar_quant.txt",sep="\t")
