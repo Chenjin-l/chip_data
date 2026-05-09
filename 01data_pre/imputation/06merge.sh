@@ -40,6 +40,20 @@ bcftools concat \
 
 tabix -f -p vcf merged_all_chr.vcf.gz
 
+bcftools annotate \
+  -x ID \
+  --set-id '%CHROM\_%POS\_%REF\_%ALT' \
+  merged_all_chr.vcf.gz \
+  -Oz -o merged_all_chr.renamed.vcf.gz
+  
+tabix -f -p vcf merged_all_chr.renamed.vcf.gz
+
+# =========================
+# replace final file
+# =========================
+mv merged_all_chr.renamed.vcf.gz merged_all_chr.vcf.gz
+mv merged_all_chr.renamed.vcf.gz.tbi merged_all_chr.vcf.gz.tbi
+
 # =========================
 # stats
 # =========================
