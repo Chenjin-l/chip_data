@@ -1,51 +1,85 @@
-# 读取 PCA
-pca <- read.table("/work/lingcj/03chip_data/02anlyis/01data/03growth/01bfile/01data/PCA/EE_growth_pca.eigenvec", header = FALSE)
+#!/usr/bin/env Rscript
+options(stringsAsFactors = FALSE)
 
-# 修改列名
+library(data.table)
+
+# ===============================
+# 1. 读取 PCA
+# ===============================
+pca <- fread("/work/lingcj/03chip_data/02anlyis/01data/03growth/01bfile/02vcf/02_1k_pigimputation/06merge/bfile/PCA/PCA.eigenvec",
+             header = FALSE)
+
 colnames(pca)[1:2] <- c("FID", "IID")
-
-# 把FID改成IID
 pca$FID <- pca$IID
 
-# 给PC命名
-colnames(pca)[3:ncol(pca)] <- paste0("PC", 1:(ncol(pca)-2))
+# PC命名
+pc_num <- ncol(pca) - 2
+colnames(pca)[3:ncol(pca)] <- paste0("PC", 1:pc_num)
 
-# <U+2705> 只保留前5个PC
-pca_sub <- pca[, c("FID", "IID", paste0("PC", 1:5))]
+# 只保留前10个PC
+pca_sub <- pca[, c("FID", "IID", paste0("PC", 1:min(10, pc_num))), with = FALSE]
 
-# 读取协变量
-covar <- read.table("covar_growth_ldak.txt", header = TRUE)
+
+# ===============================
+# 2. 读取协变量
+# ===============================
+covar <- fread("covar_growth_ldak.txt", header = TRUE)
 
 # 合并
-dat <- merge(covar, pca_sub, by=c("FID","IID"))
+dat <- merge(covar, pca_sub, by = c("FID", "IID"))
 
-# ----------------------------
-# 拆分协变量
-# ----------------------------
 
-# 1️⃣ 分类变量（factor covariates）
-covar_factor <- dat[, c("FID", "IID", "Sex", "farm")]
+# ===============================
+# 3. 自动去除常数列函数
+# ===============================
+remove_constant_cols <- function(df) {
+  keep <- sapply(df, function(x) {
+    length(unique(na.omit(x))) > 1
+  })
+  df[, keep, with = FALSE]
+}
 
-# 2️⃣ 连续变量（quantitative covariates）
-covar_quant <- dat[, c("FID", "IID", "age", paste0("PC", 1:5))]
 
-# ----------------------------
-# （可选但强烈建议）标准化 age
-# ----------------------------
-#covar_quant$age <- scale(covar_quant$age)
+# ===============================
+# 4. 分类协变量（factor）
+# ===============================
+covar_factor <- dat[, .(FID, IID, Sex, farm)]
 
-# ----------------------------
-# 输出文件
-# ----------------------------
+# 去掉单一变量
+covar_factor <- remove_constant_cols(covar_factor)
 
-write.table(covar_factor,
-            "covar_factor.txt",
-            quote=FALSE,
-            row.names=FALSE,
-            col.names=TRUE)
 
-write.table(covar_quant,
-            "covar_quant.txt",
-            quote=FALSE,
-            row.names=FALSE,
-            col.names=TRUE)
+# ===============================
+# 5. 连续协变量（quantitative）
+# ===============================
+covar_quant <- dat[, c("FID", "IID", "age", paste0("PC", 1:min(10, pc_num))), with = FALSE]
+
+# 去掉单一变量
+covar_quant <- remove_constant_cols(covar_quant)
+
+
+# ===============================
+# 6. 输出检查（关键！）
+# ===============================
+cat("\n===== Covariate Summary =====\n")
+
+cat("\nFactor covariates:\n")
+print(sapply(covar_factor[, -c("FID","IID"), with=FALSE], function(x) length(unique(x))))
+
+cat("\nQuantitative covariates:\n")
+print(sapply(covar_quant[, -c("FID","IID"), with=FALSE], function(x) length(unique(x))))
+
+cat("\nFinal factor cols:\n")
+print(colnames(covar_factor))
+
+cat("\nFinal quant cols:\n")
+print(colnames(covar_quant))
+
+cat("============================\n")
+
+
+# ===============================
+# 7. 输出文件
+# ===============================
+fwrite(covar_factor, "covar_factor.txt")
+fwrite(covar_quant,  "covar_quant.txt")
