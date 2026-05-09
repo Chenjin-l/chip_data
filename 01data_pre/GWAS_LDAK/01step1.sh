@@ -5,7 +5,7 @@
 #PBS -o /home/Mzhou/02.F2/log
 #PBS -e /home/Mzhou/02.F2/log
 #PBS -j oe
-#PBS -l mem=40G
+#PBS -l mem=50G
 #PBS -t 3-5
 
 # =========================
@@ -45,7 +45,7 @@ INDEX_FILE="/work/lingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputatio
 # =========================
 # 6. 工作目录
 # =========================
-WORK_DIR="/work/lingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputation/01step1"
+WORK_DIR="/work/lingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputation/02_1kpig_imp_gwas/02LDAK_gwas/01step1"
 
 THREADS=32
 pheno_col=$((PBS_ARRAYID-2))  # 3→1,4→2,5→3 正确
