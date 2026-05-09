@@ -7,7 +7,7 @@
 #PBS -o /home/Mzhou/02.F2/log 
 #PBS -e /home/Mzhou/02.F2/log
 #PBS -j oe
-#PBS -t 1-5
+#PBS -t 1-18
 
 BEAGLE=/home/Mzhou/02.F2/software/beagle.29Oct24.c8e.jar
 
