@@ -4,9 +4,9 @@ set -euo pipefail
 ############################
 # 输入文件
 ############################
-MAP_REF="JXLab_ChinaChip50K_PLUS_SSC11.map"
-MAP_OLD="EE.map"
-PED_OLD="EE.ped"
+MAP_REF="/work/lingcj/03chip_data/01_data/01check/JXLab_ChinaChip50K_PLUS_SSC11.map"
+MAP_OLD="/work/lingcj/03chip_data/01_data/01check/EE.map"
+PED_OLD="/work/lingcj/03chip_data/01_data/01check/EE.ped"
 KEEP_ID="/work/lingcj/03chip_data/02anlyis/01data/01pre_exchange/ID_compare/growth_keep.txt"
 
 PREFIX="EE"
@@ -58,7 +58,6 @@ plink --file ${PREFIX}.SSC11 \
 plink --bfile ${PREFIX}_growth \
       --maf 0.01 \
       --geno 0.10 \
-      --hwe 1e-6 \
       --make-bed \
       --out ${PREFIX}_QC
 
