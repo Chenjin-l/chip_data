@@ -51,8 +51,8 @@ for chr in {1..18}; do
     cd ${OUTPUT_DIR}/chr${chr}
 
     java -Xmx20g -jar ${JAR} \
-        ref=${REF_PANEL_DIR}/ffxkt2_chr${chr}.vcf.gz \
-        gt=${INPUT_VCF_PATH}/phased_chr${chr}.vcf.gz \
+        ref=${REF_PANEL_DIR}/chr${chr}.vcf.gz \
+        gt=${INPUT_VCF_PATH}/chr${chr}.vcf.gz \
         chrom=${chr} \
         match=POS \
         out=mod.chr${chr} 
