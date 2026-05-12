@@ -34,13 +34,13 @@ done
 #PBS -j oe                                                                                                                              
 #PBS -l mem=30G
 
-REF_PANEL_DIR="/home/Mzhou/02.F2/04temp_data/01txk1000pig"
+REF_PANEL_DIR="/home/Mzhou/zPig_data/01pig_panel"
 
 INPUT_VCF_PATH="/work/lingcj/03chip_data/02anlyis/01data/03growth/01bfile/02vcf/02_1k_pigimputation/01data/02vcf/split_vcf"
 
 OUTPUT_DIR="/work/lingcj/03chip_data/02anlyis/01data/03growth/01bfile/02vcf/02_1k_pigimputation/01data/03conform-gt"
 
-JAR="/home/Mzhou/02.F2/software/conform-gt/conform-gt.24May16.cee.jar"
+JAR="/home/Mzhou/02.F2/sofware/conform-gt/conform-gt.24May16.cee.jar"
 
 cd /work/lingcj/03chip_data/02anlyis/01data/03growth/01bfile/02vcf/02_1k_pigimputation/01data/03conform-gt
 for chr in {1..18}; do
