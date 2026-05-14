@@ -1,0 +1,94 @@
+#Usage: singularity exec ~/01.Biosoft/03.Sif/R_New.simg  Rscript 01.Phe_rmOut_adjust-F6.r
+#Author: Dreames(M.Z),2025-3-29
+rm(list=ls());options(stringsAsFactors=FALSE)
+library(dplyr)
+
+ARGS <- commandArgs(trailingOnly = TRUE)
+data1 = ARGS[1]
+Phenum = ARGS[2]
+if (!file.exists(data1)) { stop("Can not find the file") }
+#if (!file.exists(Phenum)) { stop("Can not find the ARGS2") }
+filename = basename(data1)
+
+data <- read.csv(
+  file = data1,
+  header = TRUE,
+  check.names = FALSE) 
+
+phe = data[,Phenum:ncol(data)]
+phe <- phe %>%mutate_if(is.character, as.numeric)
+phe = phe[, !sapply(phe, function(col) all(is.na(col)))] #移除整个表型全是 NA 的列
+phe_original = phe
+#1.表型异常值处理
+trimPhe = function(x, threshold = 0.1) {
+    u = median(x, na.rm = TRUE)
+    d = quantile(x, 0.75, na.rm = TRUE) - quantile(x, 0.25, na.rm = TRUE)
+    uplim = u + 3 * d
+    lowlim = u - 3 * d
+    # 计算异常值的个数
+    outlier_count = sum(x < lowlim | x > uplim, na.rm = TRUE)
+    total_count = sum(!is.na(x))  # 计算非 NA 的样本数
+    outlier_ratio = outlier_count / total_count
+    # 仅当异常值比例 ≤ 10% 时才替换
+    if (outlier_ratio <= threshold) {
+        x[which(x < lowlim | x > uplim)] = NA
+    }
+
+    return(x)
+}
+
+for(i in 1:ncol(phe)) {
+    phe[, i] = trimPhe(phe[, i])
+}
+
+#2.矫正表型
+covariates = data[, c("Sex", "Batch")]
+adjustedPhe = phe  # 复制原始数据
+for (i in 1:ncol(phe)) {
+    tryCatch({
+        df_tmp = data.frame(
+            y = phe[, i],
+            sex = factor(covariates$Sex),
+            batch = factor(covariates$Batch),
+	    Wt = as.numeric(data$CarcassWt),
+	    Age =  as.numeric(data$Age)
+        )
+
+        # 保留非NA行的索引
+        complete_idx = which(complete.cases(df_tmp))
+        fit = lm(y ~ sex + batch  + Wt + Age, data = df_tmp[complete_idx, ])
+        
+        # 初始化一个全NA向量
+        res_vec = rep(NA, nrow(phe))
+        res_vec[complete_idx] = residuals(fit)
+
+        adjustedPhe[, i] = res_vec
+        cat("Adjusted phenotype:", colnames(phe)[i], "\n")
+    }, error = function(e) {
+        cat("Skipping phenotype:", colnames(phe)[i], "due to error:", conditionMessage(e), "\n")
+    })
+}
+phe = adjustedPhe
+
+#3.比较过滤前后表型数
+compareNonNA = function(original, filtered) {
+    original_count = sapply(original, function(x) sum(!is.na(x)))
+    filtered_count = sapply(filtered, function(x) sum(!is.na(x)))
+    removed = original_count - filtered_count
+    result = data.frame(
+        Variable = names(original),
+        Before = original_count,
+        After = filtered_count,
+        Removed = removed
+    )
+    return(result)
+}
+
+nonNA_summary = compareNonNA(phe_original, phe)
+#保存数据
+ID = data[,1:(as.numeric(Phenum) - 1)]
+phe=cbind(ID,phe)
+write.csv(phe, file = paste0(filename,".rmoutlier-adjustPhe"),col.names=T,row.names=F,quote=F)
+
+write.csv(nonNA_summary, file = paste0(filename,"_filtered.summary"),col.names=T,row.names=F,quote=F)
+
