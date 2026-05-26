@@ -1,6 +1,7 @@
 
 
 #!/bin/bash
+#PBS -N female_gemma_chr
 #PBS -q batch
 #PBS -l nodes=1:ppn=4
 #PBS -l mem=20G
