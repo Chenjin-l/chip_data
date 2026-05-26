@@ -30,7 +30,7 @@ chr=${PBS_ARRAYID}
 ########################################
 i=3
 
-INDEX_FILE="/home/Mzhou/zlingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputation/02_1kpig_imp_gwas/01data/02pheno_covar/index_growth.txt"
+INDEX="/home/Mzhou/zlingcj/03chip_data/02anlyis/01data/03growth/03GWAS/02imputation/02_1kpig_imp_gwas/01data/02pheno_covar/index_growth.txt"
 
 name=$(awk -v n=$i 'NR==n{print $1}' ${INDEX})
 
